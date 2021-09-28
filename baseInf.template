@@ -386,23 +386,23 @@ Resources:
     Type: "AWS::CertificateManager::Certificate"
     Properties:
       DomainName: drscrumptious.com
+      ValidationMethod: DNS
+      SubjectAlternativeNames:
+        - "*.drscrumptious.com"
       DomainValidationOptions:
         - DomainName: drscrumptious.com
           HostedZoneId: !Ref HostedZone
-        - DomainName: www.drscrumptious.com
+        - DomainName: "*.drscrumptious.com"
           HostedZoneId: !Ref HostedZone
-        - DomainName: api.drscrumptious.com
-          HostedZoneId: !Ref HostedZone
-        - DomainName: admin.drscrumptious.com
-          HostedZoneId: !Ref HostedZone
-        - DomainName: driver.drscrumptious.com
-          HostedZoneId: !Ref HostedZone
-      SubjectAlternativeNames:
-        - www.drscrumptious.com
-        - admin.drscrumptious.com
-        - driver.drscrumptious.com
-        - api.drscrumptious.com
-      ValidationMethod: DNS
+  LoadBalancerRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: api.drscrumptious.com
+      Type: CNAME
+      TTL: 900
+      HostedZoneId: !Ref HostedZone
+      ResourceRecords:
+        - !GetAtt LoadBalancer.DNSName
 
   # ECS
   LoadBalancer:
