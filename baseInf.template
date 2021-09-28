@@ -375,10 +375,6 @@ Resources:
       Name: drscrumptious.com
       HostedZoneConfig:
         Comment: My hosted zone for example.com
-      VPCs:
-        - VPCId: !Ref VPC
-          VPCRegion:
-            Ref: "AWS::Region"
       HostedZoneTags:
         - Key: "name"
           Value: "drscrumptious.com"
@@ -388,12 +384,10 @@ Resources:
       DomainName: drscrumptious.com
       ValidationMethod: DNS
       SubjectAlternativeNames:
-        - "*.drscrumptious.com"
-      DomainValidationOptions:
-        - DomainName: drscrumptious.com
-          HostedZoneId: !Ref HostedZone
-        - DomainName: "*.drscrumptious.com"
-          HostedZoneId: !Ref HostedZone
+        - admin.drscrumptious.com
+        - driver.drscrumptious.com
+        - api.drscrumptious.com
+        - www.drscrumptious.com
   LoadBalancerRecord:
     Type: AWS::Route53::RecordSet
     Properties:
