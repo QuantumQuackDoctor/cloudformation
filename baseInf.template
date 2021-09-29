@@ -371,6 +371,8 @@ Resources:
   # Route 53
   HostedZone:
     Type: AWS::Route53::HostedZone
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       Name: drscrumptious.com
       HostedZoneConfig:
@@ -380,6 +382,8 @@ Resources:
           Value: "drscrumptious.com"
   MainCertificate:
     Type: "AWS::CertificateManager::Certificate"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       DomainName: drscrumptious.com
       ValidationMethod: DNS
@@ -388,6 +392,17 @@ Resources:
         - driver.drscrumptious.com
         - api.drscrumptious.com
         - www.drscrumptious.com
+      DomainValidationOptions:
+        - DomainName: drscrumptious.com
+          HostedZoneId: !Ref HostedZone
+        - DomainName: admin.drscrumptious.com
+          HostedZoneId: !Ref HostedZone
+        - DomainName: driver.drscrumptious.com
+          HostedZoneId: !Ref HostedZone
+        - DomainName: api.drscrumptious.com
+          HostedZoneId: !Ref HostedZone
+        - DomainName: www.drscrumptious.com
+          HostedZoneId: !Ref HostedZone
   LoadBalancerRecord:
     Type: AWS::Route53::RecordSet
     Properties:
