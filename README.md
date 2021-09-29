@@ -65,3 +65,5 @@ I could have the function chaining incorrect, but it's definitily those two func
 - RestaurantTGArn
 - ECSClusterName
 - DBEndpoint
+- DBName
+- DBPort

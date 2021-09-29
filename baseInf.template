@@ -578,3 +578,13 @@ Outputs:
     Value: !GetAtt Database.Endpoint.Address
     Export:
       Name: !Sub "${AWS::StackName}-DBEndpoint"
+  DatabaseName:
+    Description: "database name"
+    Value: !Ref DBName
+    Export:
+      Name: !Sub "${AWS::StackName}-DBName"
+  DatabasePort:
+    Description: "database port"
+    Value: !Ref DBPort
+    Export:
+      Name: !Sub "${AWS::StackName}-DBPort"
