@@ -585,6 +585,6 @@ Outputs:
       Name: !Sub "${AWS::StackName}-DBName"
   DatabasePort:
     Description: "database port"
-    Value: !Ref DBPort
+    Value: !GetAtt Database.Endpoint.Port
     Export:
       Name: !Sub "${AWS::StackName}-DBPort"
