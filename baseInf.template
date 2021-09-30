@@ -25,8 +25,18 @@ Metadata:
           - DBInstanceClass
           - DBAllocatedStorage
           - DBName
+      - Label:
+          default: "Route 53"
+        Parameters:
+          - HostedZoneId
+          - CertificateARN
 
 Parameters:
+  HostedZoneId:
+    Type: String
+  CertificateARN:
+    Type: String
+
   UserPortalBucketName:
     Type: String
     Default: qqd-user-portal
@@ -369,47 +379,13 @@ Resources:
               CanonicalUser: !GetAtt AccessIdentity.S3CanonicalUserId
 
   # Route 53
-  HostedZone:
-    Type: AWS::Route53::HostedZone
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      Name: drscrumptious.com
-      HostedZoneConfig:
-        Comment: My hosted zone for example.com
-      HostedZoneTags:
-        - Key: "name"
-          Value: "drscrumptious.com"
-  MainCertificate:
-    Type: "AWS::CertificateManager::Certificate"
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      DomainName: drscrumptious.com
-      ValidationMethod: DNS
-      SubjectAlternativeNames:
-        - admin.drscrumptious.com
-        - driver.drscrumptious.com
-        - api.drscrumptious.com
-        - www.drscrumptious.com
-      DomainValidationOptions:
-        - DomainName: drscrumptious.com
-          HostedZoneId: !Ref HostedZone
-        - DomainName: admin.drscrumptious.com
-          HostedZoneId: !Ref HostedZone
-        - DomainName: driver.drscrumptious.com
-          HostedZoneId: !Ref HostedZone
-        - DomainName: api.drscrumptious.com
-          HostedZoneId: !Ref HostedZone
-        - DomainName: www.drscrumptious.com
-          HostedZoneId: !Ref HostedZone
   LoadBalancerRecord:
     Type: AWS::Route53::RecordSet
     Properties:
       Name: api.drscrumptious.com
       Type: CNAME
       TTL: 900
-      HostedZoneId: !Ref HostedZone
+      HostedZoneId: !Ref HostedZoneId
       ResourceRecords:
         - !GetAtt LoadBalancer.DNSName
 
@@ -431,10 +407,10 @@ Resources:
       Port: 443
       Protocol: "HTTPS"
       Certificates:
-        - CertificateArn: !Ref MainCertificate
+        - CertificateArn: !Ref CertificateARN
       LoadBalancerArn: !Ref LoadBalancer
       DefaultActions:
-        - Type: fixed
+        - Type: fixed-response
           FixedResponseConfig:
             StatusCode: 404
             MessageBody: "method not found"
