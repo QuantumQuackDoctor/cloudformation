@@ -61,7 +61,7 @@ I could have the function chaining incorrect, but it's definitily those two func
 - S3AccessIdentity
 - LBListenerARN
 - UserTGArn
-- AdminTGArn
+- OrderTGArn
 - RestaurantTGArn
 - ECSClusterName
 - DBEndpoint

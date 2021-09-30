@@ -427,7 +427,7 @@ Resources:
       Name: UserTargetGroup
       Port: 8080
       Protocol: HTTP
-  AdminTargetGroup:
+  OrderTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckEnabled: true
@@ -435,7 +435,7 @@ Resources:
       HealthCheckPort: 8080
       HealthCheckProtocol: HTTP
       VpcId: !Ref VPC
-      Name: AdminTargetGroup
+      Name: OrderTargetGroup
       Port: 8080
       Protocol: HTTP
   RestaurantTargetGroup:
@@ -549,9 +549,9 @@ Outputs:
     Value: !Ref UserTargetGroup
     Export:
       Name: !Sub "${AWS::StackName}-UserTGArn"
-  AdminTargetGroupArn:
+  OrderTargetGroupArn:
     Description: "Admin target group arn"
-    Value: !Ref AdminTargetGroup
+    Value: !Ref OrderTargetGroup
     Export:
       Name: !Sub "${AWS::StackName}-AdminTGArn"
   RestaurantTargetGroupArn:
