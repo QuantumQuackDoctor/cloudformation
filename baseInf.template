@@ -556,7 +556,7 @@ Outputs:
     Description: "Admin target group arn"
     Value: !Ref OrderTargetGroup
     Export:
-      Name: !Sub "${AWS::StackName}-AdminTGArn"
+      Name: !Sub "${AWS::StackName}-OrderTGArn"
   RestaurantTargetGroupArn:
     Description: "Restaurant target group arn"
     Value: !Ref RestaurantTargetGroup
