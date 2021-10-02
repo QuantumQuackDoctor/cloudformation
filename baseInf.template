@@ -427,6 +427,7 @@ Resources:
       Name: UserTargetGroup
       Port: 8080
       Protocol: HTTP
+      TargetType: ip
   OrderTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -438,6 +439,7 @@ Resources:
       Name: OrderTargetGroup
       Port: 8080
       Protocol: HTTP
+      TargetType: ip
   RestaurantTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -449,6 +451,7 @@ Resources:
       Name: RestaurantTargetGroup
       Port: 8080
       Protocol: HTTP
+      TargetType: ip
   # ECS cluster
   ECSCluster:
     Type: AWS::ECS::Cluster
