@@ -509,7 +509,7 @@ Outputs:
       Name: !Sub "${AWS::StackName}-VPCID"
   ServiceSecurityGroupName:
     Description: "Service security group name"
-    Value: !Ref VPC
+    Value: !Ref ServiceSecurityGroup
     Export:
       Name: !Sub "${AWS::StackName}-ServiceSecurityGroup"
   FargateRoleARN:
