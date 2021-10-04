@@ -587,3 +587,18 @@ Outputs:
     Value: !Ref HostedZoneId
     Export:
       Name: !Sub "${AWS::StackName}-HostedZoneId"
+  AdminPortalBucketDomainName:
+    Description: "domain name for admin portal bucket"
+    Value: !GetAtt AdminPortal.DomainName
+    Export:
+      Name: !Sub "${AWS::StackName}-AdminPortalDomainName"
+  UserPortalBucketDomainName:
+    Description: "domain name for user portal bucket"
+    Value: !GetAtt UserPortal.DomainName
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPortalDomainName"
+  DriverPortalBucketDomainName:
+    Description: "domain name for driver portal bucket"
+    Value: !GetAtt DriverPortal.DomainName
+    Export:
+      Name: !Sub "${AWS::StackName}-DriverPortalDomainName"

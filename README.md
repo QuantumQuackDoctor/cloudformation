@@ -68,3 +68,6 @@ I could have the function chaining incorrect, but it's definitily those two func
 - DBName
 - DBPort
 - HostedZoneId
+- AdminPortalDomainName
+- UserPortalDomainName
+- DriverPortalDomainName
