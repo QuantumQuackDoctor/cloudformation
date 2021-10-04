@@ -582,3 +582,8 @@ Outputs:
     Value: !GetAtt Database.Endpoint.Port
     Export:
       Name: !Sub "${AWS::StackName}-DBPort"
+  HostedZoneId:
+    Description: "hosted zone id"
+    Value: !Ref HostedZoneId
+    Export:
+      Name: !Sub "${AWS::StackName}-HostedZoneId"
