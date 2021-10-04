@@ -587,6 +587,11 @@ Outputs:
     Value: !Ref HostedZoneId
     Export:
       Name: !Sub "${AWS::StackName}-HostedZoneId"
+  CertificateArn:
+    Description: "certificate arn"
+    Value: !Ref CertificateARN
+    Export:
+      Name: !Sub "${AWS::StackName}-CertificateARN"
   AdminPortalBucketDomainName:
     Description: "domain name for admin portal bucket"
     Value: !GetAtt AdminPortal.DomainName
