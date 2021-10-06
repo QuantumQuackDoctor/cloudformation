@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "S3"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:GetObject"
+                Resource:
+                  - "{{resolve:secretsmanager:CsvBucketArn"
+  CsvLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: "inserts values from csv into database"
+      FunctionName: CsvLambda
+      Handler: com.ss.lambda.csv.CsvS3Handler::handleRequest
+      MemorySize: 312
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: java8
+      Timeout: 500
+      VpcConfig:
+        SubnetIds:
+          - "{{resolve:secretsmanager:PublicSubnet1}}"
+          - "{{resolve:secretsmanager:PublicSubnet2}}"
+      Environment:
+        Variables:
+          DB_URL: !Join
+            - ""
+            - - "jdbc:postgresql://"
+              - "{{resolve:secretsmanager:DatabaseEndpoint}}"
+              - ":"
+              - "{{resolve:secretsmanager:DatabasePort}}"
+              - "/"
+              - "{{resolve:secretsmanager:DatabaseName}}"
+          DB_User: "{{resolve:secretsmanager:DBUsername}}"
+          DB_Password: "{{resolve:secretsmanager:DBPassword}}"
+      Code:
+        S3Bucket: "{{resolve:secretsmanager:CsvBucketName}}"
+        S3Key: function.zip

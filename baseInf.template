@@ -30,6 +30,10 @@ Metadata:
         Parameters:
           - HostedZoneId
           - CertificateARN
+      - Label:
+          default: "CSV Lambda function"
+        Parameters:
+          - CsvBucketName
 
 Parameters:
   HostedZoneId:
@@ -46,6 +50,10 @@ Parameters:
   DriverPortalBucketName:
     Type: String
     Default: qqd-driver-portal
+
+  CsvBucketName:
+    Type: String
+    Default: qqd-csv-bucket
 
   ECSClusterName:
     Type: String
@@ -396,6 +404,30 @@ Resources:
             Resource: !Sub "arn:aws:s3:::${DriverPortal}/*"
             Principal:
               CanonicalUser: !GetAtt AccessIdentity.S3CanonicalUserId
+  # Lambda function Buckets
+  CsvBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Ref CsvBucketName
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            Id: GlacierRule
+            Prefix: glacier
+            Transitions:
+              - StorageClass: GLACIER
+                TransitionInDays: 3
+  CsvBucketArnSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: CsvBucketArn
+      SecretString: !GetAtt CsvBucket.Arn
+  CsvBucketnameSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: CsvBucketName
+      SecretString: !Ref CsvBucket
 
   # Route 53
   LoadBalancerRecord:
@@ -509,122 +541,120 @@ Resources:
       Tags:
         - Key: name
           Value: "PrivateSubnetGroup"
+  VpcId:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: VpcId
+      SecretString: !Ref VPC
+  ServiceSecurityGroupName:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: ServiceSecurityGroup
+      SecretString: !Ref ServiceSecurityGroup
+  FargateRoleARN:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: FargateRoleARN
+      SecretString: !GetAtt FargateRole.Arn
+  PublicSubnet1Secret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: PublicSubnet1
+      SecretString: !Ref PublicSubnet1
+  PublicSubnet2Secret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref PublicSubnet2
+      Name: PublicSubnet2
+  PrivateSubnet1Secret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref PrivateSubnet1
+      Name: PrivateSubnet1
+  PrivateSubnet2Secret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref PrivateSubnet2
+      Name: PrivateSubnet2
+  AccessIdentitySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref AccessIdentity
+      Name: S3AccessIdentity
+  LBListenerArn:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref LoadBalancerListener
+      Name: LBListenerARN
+  UserTargetGroupArn:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref UserTargetGroup
+      Name: UserTGArn
+  OrderTargetGroupArn:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref OrderTargetGroup
+      Name: OrderTGArn
+  RestaurantTargetGroupArn:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref RestaurantTargetGroup
+      Name: RestaurantTGArn
+  ECSClusterNameSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref ECSClusterName
+      Name: ECSClusterName
   DatabaseUsernameSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: DBUsername
+      Name: DatabaseUsername
       Description: "Username for main database"
       SecretString: !Ref DBUsername
   DatabasePasswordSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: DBPassword
+      Name: DatabasePassword
       Description: "Password for main database"
       SecretString: !Ref DBPassword
-
-Outputs:
-  VPCID:
-    Description: "Vpc Id"
-    Value: !Ref VPC
-    Export:
-      Name: !Sub "${AWS::StackName}-VPCID"
-  ServiceSecurityGroupName:
-    Description: "Service security group name"
-    Value: !Ref ServiceSecurityGroup
-    Export:
-      Name: !Sub "${AWS::StackName}-ServiceSecurityGroup"
-  FargateRoleARN:
-    Description: "Fargate role ARN"
-    Value: !GetAtt FargateRole.Arn
-    Export:
-      Name: !Sub "${AWS::StackName}-FargateRoleARN"
-  PublicSubnet1:
-    Description: "public subnet 1 id"
-    Value: !Ref PublicSubnet1
-    Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnet1"
-  PublicSubnet2:
-    Description: "public subnet 2 id"
-    Value: !Ref PublicSubnet2
-    Export:
-      Name: !Sub "${AWS::StackName}-PublicSubnet2"
-  PrivateSubnet1:
-    Description: "private subnet 1 id"
-    Value: !Ref PrivateSubnet1
-    Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnet1"
-  PrivateSubnet2:
-    Description: "private subnet 2 id"
-    Value: !Ref PrivateSubnet2
-    Export:
-      Name: !Sub "${AWS::StackName}-PrivateSubnet2"
-  AccessIdentity:
-    Description: "origin access identity, allows get object to all portal buckets"
-    Value: !Ref AccessIdentity
-    Export:
-      Name: !Sub "${AWS::StackName}-S3AccessIdentity"
-  LBListenerArn:
-    Description: "ARN for load balancer main listener, has certificate for https"
-    Value: !Ref LoadBalancerListener
-    Export:
-      Name: !Sub "${AWS::StackName}-LBListenerARN"
-  UserTargetGroupArn:
-    Description: "User target group arn"
-    Value: !Ref UserTargetGroup
-    Export:
-      Name: !Sub "${AWS::StackName}-UserTGArn"
-  OrderTargetGroupArn:
-    Description: "Admin target group arn"
-    Value: !Ref OrderTargetGroup
-    Export:
-      Name: !Sub "${AWS::StackName}-OrderTGArn"
-  RestaurantTargetGroupArn:
-    Description: "Restaurant target group arn"
-    Value: !Ref RestaurantTargetGroup
-    Export:
-      Name: !Sub "${AWS::StackName}-RestaurantTGArn"
-  ECSClusterName:
-    Description: "ECS cluster name"
-    Value: !Ref ECSClusterName
-    Export:
-      Name: !Sub "${AWS::StackName}-ECSClusterName"
   DatabaseEndpoint:
-    Description: "database url"
-    Value: !GetAtt Database.Endpoint.Address
-    Export:
-      Name: !Sub "${AWS::StackName}-DBEndpoint"
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !GetAtt Database.Endpoint.Address
+      Name: DBEndpoint
   DatabaseName:
-    Description: "database name"
-    Value: !Ref DBName
-    Export:
-      Name: !Sub "${AWS::StackName}-DBName"
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref DBName
+      Name: DBName
   DatabasePort:
-    Description: "database port"
-    Value: !GetAtt Database.Endpoint.Port
-    Export:
-      Name: !Sub "${AWS::StackName}-DBPort"
-  HostedZoneId:
-    Description: "hosted zone id"
-    Value: !Ref HostedZoneId
-    Export:
-      Name: !Sub "${AWS::StackName}-HostedZoneId"
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !GetAtt Database.Endpoint.Port
+      Name: DBPort
+  HostedZoneIdSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref HostedZoneId
+      Name: HostedZoneId
   CertificateArn:
-    Description: "certificate arn"
-    Value: !Ref CertificateARN
-    Export:
-      Name: !Sub "${AWS::StackName}-CertificateARN"
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !Ref CertificateARN
+      Name: CertificateARN
   AdminPortalBucketDomainName:
-    Description: "domain name for admin portal bucket"
-    Value: !GetAtt AdminPortal.DomainName
-    Export:
-      Name: !Sub "${AWS::StackName}-AdminPortalDomainName"
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !GetAtt AdminPortal.DomainName
+      Name: AdminPortalDomainName
   UserPortalBucketDomainName:
-    Description: "domain name for user portal bucket"
-    Value: !GetAtt UserPortal.DomainName
-    Export:
-      Name: !Sub "${AWS::StackName}-UserPortalDomainName"
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !GetAtt UserPortal.DomainName
+      Name: UserPortalDomainName
   DriverPortalBucketDomainName:
-    Description: "domain name for driver portal bucket"
-    Value: !GetAtt DriverPortal.DomainName
-    Export:
-      Name: !Sub "${AWS::StackName}-DriverPortalDomainName"
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      SecretString: !GetAtt DriverPortal.DomainName
+      Name: DriverPortalDomainName
