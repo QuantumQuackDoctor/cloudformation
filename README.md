@@ -1,6 +1,6 @@
 # Cloudformation Repository
 
-This repository contains all cloudformation templates
+This repository contains the base infrastructure template
 
 ## Base Infrastrucure template
 
