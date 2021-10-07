@@ -81,7 +81,7 @@ Resources:
   DatabaseUsernameSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: DatabaseUsername
+      Name: DBUsername
       Description: "Username for main database"
       GenerateSecretString:
         ExcludeNumbers: true
@@ -91,7 +91,7 @@ Resources:
   DatabasePasswordSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: DatabasePassword
+      Name: DBPassword
       Description: "Password for main database"
       GenerateSecretString:
         PasswordLength: 24
