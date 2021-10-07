@@ -17,15 +17,6 @@ Metadata:
           - OrderServiceRepoName
           - RestaurantServiceRepoName
       - Label:
-          default: "Database parameters"
-        Parameters:
-          - DBInstanceID
-          - DBUsername
-          - DBPassword
-          - DBInstanceClass
-          - DBAllocatedStorage
-          - DBName
-      - Label:
           default: "Route 53"
         Parameters:
           - HostedZoneId
@@ -71,70 +62,8 @@ Parameters:
     Default: restaurant-service
     AllowedPattern: "[a-z\\-]+"
 
-  DBInstanceID:
-    Default: MainDB
-    Description: My database instance
-    Type: String
-    MinLength: "1"
-    MaxLength: "63"
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
-    ConstraintDescription: >-
-      Must begin with a letter and must not end with a hyphen or contain two
-      consecutive hyphens.
-  DBName:
-    Default: MainDB
-    Description: My database
-    Type: String
-    MinLength: "1"
-    MaxLength: "64"
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
-    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
-  DBInstanceClass:
-    Default: db.t2.micro
-    Description: DB instance class
-    Type: String
-    ConstraintDescription: Must select a valid DB instance type.
-  DBAllocatedStorage:
-    Default: "25"
-    Description: The size of the database (GiB)
-    Type: Number
-    MinValue: "20"
-    MaxValue: "65536"
-    ConstraintDescription: must be between 20 and 65536 GiB.
-  DBUsername:
-    NoEcho: "true"
-    Description: Username for MySQL database access
-    Type: String
-    MinLength: "1"
-    MaxLength: "16"
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
-    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
-  DBPassword:
-    NoEcho: "true"
-    Description: Password MySQL database access
-    Type: String
-    MinLength: "8"
-    MaxLength: "41"
-    AllowedPattern: "[a-zA-Z0-9]*"
-    ConstraintDescription: must contain only alphanumeric characters.
-
 Resources:
   # SecurityGroups
-  DatabaseSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: DatabaseSecurityGroup
-      GroupDescription: "allows traffic on port 5432"
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: -1
-          FromPort: 5432
-          ToPort: 5432
-          CidrIp: 0.0.0.0/0
-      #Egress is automatically defined to allow all
-      Tags:
-        - Key: name
-          Value: DatabaseSecurityGroup
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -513,34 +442,6 @@ Resources:
         - FARGATE
       ClusterName: !Ref ECSClusterName
 
-  # RDS
-  Database:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      AllocatedStorage: !Ref DBAllocatedStorage
-      DBInstanceClass: !Ref DBInstanceClass
-      DBName: !Ref DBName
-      DBSubnetGroupName: !Ref DatabaseSubnetGroup
-      DBInstanceIdentifier: !Ref DBInstanceID
-      Engine: postgres
-      EngineVersion: 12.7
-      MasterUsername: !Ref DBUsername
-      MasterUserPassword: !Ref DBPassword
-      Port: 5432
-      PubliclyAccessible: false
-      StorageEncrypted: false
-      VPCSecurityGroups:
-        - !Ref DatabaseSecurityGroup
-  DatabaseSubnetGroup:
-    Type: AWS::RDS::DBSubnetGroup
-    Properties:
-      DBSubnetGroupDescription: "group for private subnets"
-      SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-      Tags:
-        - Key: name
-          Value: "PrivateSubnetGroup"
   VpcId:
     Type: AWS::SecretsManager::Secret
     Properties:
@@ -606,33 +507,6 @@ Resources:
     Properties:
       SecretString: !Ref ECSClusterName
       Name: ECSClusterName
-  DatabaseUsernameSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: DatabaseUsername
-      Description: "Username for main database"
-      SecretString: !Ref DBUsername
-  DatabasePasswordSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: DatabasePassword
-      Description: "Password for main database"
-      SecretString: !Ref DBPassword
-  DatabaseEndpoint:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      SecretString: !GetAtt Database.Endpoint.Address
-      Name: DBEndpoint
-  DatabaseName:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      SecretString: !Ref DBName
-      Name: DBName
-  DatabasePort:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      SecretString: !GetAtt Database.Endpoint.Port
-      Name: DBPort
   HostedZoneIdSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
