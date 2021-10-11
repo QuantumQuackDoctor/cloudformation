@@ -31,26 +31,9 @@ AWS secrets manager is used for sensitive data and nonsensitive data is specifie
 
 - DBUsername
 - DBPassword
-
-### Outputs
-
-Retrive outputs using
-
-```
-!ImportValue
-    - !Sub "${BaseStackName}-[Desired-Parameter]"
-```
-
-Where "BaseStackName" is a parameter
-Ex.
-
-```
-!ImportValue
-    - !Sub "${BaseStackName}-VPCID"
-```
-
-I could have the function chaining incorrect, but it's definitily those two functions
-
+- DBEndpoint
+- DBName
+- DBPort
 - ServiceSecurityGroup
 - FargateRoleARN
 - VPCID
@@ -64,9 +47,6 @@ I could have the function chaining incorrect, but it's definitily those two func
 - OrderTGArn
 - RestaurantTGArn
 - ECSClusterName
-- DBEndpoint
-- DBName
-- DBPort
 - HostedZoneId
 - AdminPortalDomainName
 - UserPortalDomainName

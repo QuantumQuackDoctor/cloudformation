@@ -1,8 +1,15 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: "template for rds instance"
 Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - "prod"
+      - "dev"
+      - "test"
   DBInstanceID:
-    Default: MainDB
+    Default: DB
     Description: My database instance
     Type: String
     MinLength: "1"
@@ -12,7 +19,7 @@ Parameters:
       Must begin with a letter and must not end with a hyphen or contain two
       consecutive hyphens.
   DBName:
-    Default: MainDB
+    Default: DB
     Description: My database
     Type: String
     MinLength: "1"
@@ -35,7 +42,7 @@ Resources:
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: DatabaseSecurityGroup
+      GroupName: !Sub "DatabaseSecurityGroup-${Environment}"
       GroupDescription: "allows traffic on port 5432"
       VpcId: "{{resolve:secretsmanager:VpcId}}"
       SecurityGroupIngress:
@@ -51,13 +58,13 @@ Resources:
     Properties:
       AllocatedStorage: !Ref DBAllocatedStorage
       DBInstanceClass: !Ref DBInstanceClass
-      DBName: !Ref DBName
+      DBName: !Sub "${DBName}-${Environment}"
       DBSubnetGroupName: !Ref DatabaseSubnetGroup
-      DBInstanceIdentifier: !Ref DBInstanceID
+      DBInstanceIdentifier: !Sub "${DBInstanceID}-${Environment}"
       Engine: postgres
       EngineVersion: 12.7
-      MasterUsername: "{{resolve:secretsmanager:DBUsername}}"
-      MasterUserPassword: "{{resolve:secretsmanager:DBPassword}}"
+      MasterUsername: !Sub "{{resolve:secretsmanager:DBUsername-${Environment}}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:DBPassword-${Environment}}}"
       Port: 5432
       PubliclyAccessible: false
       StorageEncrypted: false
@@ -71,17 +78,17 @@ Resources:
     Properties:
       DBSubnetGroupDescription: "group for private subnets"
       SubnetIds:
-        - "{{resolve:secretsmanager:PrivateSubnet1}}"
-        - "{{resolve:secretsmanager:PrivateSubnet2}}"
+        - !Sub "{{resolve:secretsmanager:PrivateSubnet1-${Environment}}}"
+        - !Sub "{{resolve:secretsmanager:PrivateSubnet2-${Environment}}}"
       Tags:
         - Key: name
-          Value: "PrivateSubnetGroup"
+          Value: !Sub "PrivateSubnetGroup-${Environment}"
 
   # Secrets
   DatabaseUsernameSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: DBUsername
+      Name: !Sub "DBUsername-${Environment}"
       Description: "Username for main database"
       GenerateSecretString:
         ExcludeNumbers: true
@@ -91,7 +98,7 @@ Resources:
   DatabasePasswordSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: DBPassword
+      Name: !Sub "DBPassword-${Environment}"
       Description: "Password for main database"
       GenerateSecretString:
         PasswordLength: 24
@@ -100,14 +107,14 @@ Resources:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !GetAtt Database.Endpoint.Address
-      Name: DBEndpoint
+      Name: !Sub "DBEndpoint-${Environment}"
   DatabaseName:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref DBName
-      Name: DBName
+      Name: !Sub "DBName-${Environment}"
   DatabasePort:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !GetAtt Database.Endpoint.Port
-      Name: DBPort
+      Name: !Sub "DBPort-${Environment}"

@@ -1,4 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - "prod"
+      - "dev"
+      - "test"
 Resources:
   LambdaRole:
     Type: AWS::IAM::Role
@@ -22,7 +30,7 @@ Resources:
                 Action:
                   - "s3:GetObject"
                 Resource:
-                  - "{{resolve:secretsmanager:CsvBucketArn"
+                  - !Sub "{{resolve:secretsmanager:CsvBucketArn-${Environment}}}"
   CsvLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -35,20 +43,20 @@ Resources:
       Timeout: 500
       VpcConfig:
         SubnetIds:
-          - "{{resolve:secretsmanager:PublicSubnet1}}"
-          - "{{resolve:secretsmanager:PublicSubnet2}}"
+          - !Sub "{{resolve:secretsmanager:PublicSubnet1-${Environment}}}"
+          - !Sub "{{resolve:secretsmanager:PublicSubnet2-${Environment}}}"
       Environment:
         Variables:
           DB_URL: !Join
             - ""
             - - "jdbc:postgresql://"
-              - "{{resolve:secretsmanager:DatabaseEndpoint}}"
+              - !Sub "{{resolve:secretsmanager:DatabaseEndpoint-${Environment}}}"
               - ":"
-              - "{{resolve:secretsmanager:DatabasePort}}"
+              - !Sub "{{resolve:secretsmanager:DatabasePort-${Environment}}}"
               - "/"
-              - "{{resolve:secretsmanager:DatabaseName}}"
-          DB_User: "{{resolve:secretsmanager:DBUsername}}"
-          DB_Password: "{{resolve:secretsmanager:DBPassword}}"
+              - !Sub "{{resolve:secretsmanager:DatabaseName-${Environment}}}"
+          DB_User: !Sub "{{resolve:secretsmanager:DBUsername-${Environment}}}"
+          DB_Password: !Sub "{{resolve:secretsmanager:DBPassword-${Environment}}}"
       Code:
-        S3Bucket: "{{resolve:secretsmanager:CsvBucketName}}"
+        S3Bucket: !Sub "{{resolve:secretsmanager:CsvBucketName-${Environment}}}"
         S3Key: function.zip

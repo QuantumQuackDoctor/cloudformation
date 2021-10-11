@@ -4,6 +4,10 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
+          default: "Environment"
+        Parameters:
+          - Environment
+      - Label:
           default: "Portal buckets"
         Parameters:
           - UserPortalBucketName
@@ -27,10 +31,21 @@ Metadata:
           - CsvBucketName
 
 Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - "prod"
+      - "dev"
+      - "test"
+
   HostedZoneId:
     Type: String
   CertificateARN:
     Type: String
+  LoadBalancerPath:
+    Type: String
+    Default: api.drscrumptious.com
 
   UserPortalBucketName:
     Type: String
@@ -67,7 +82,7 @@ Resources:
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: ServiceSecurityGroup
+      GroupName: !Sub "ServiceSecurityGroup-${Environment}"
       GroupDescription: allows traffic on port 8080
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -81,7 +96,7 @@ Resources:
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: LoadBalancerSecurityGroup
+      GroupName: !Sub "LoadBalancerSecurityGroup-${Environment}"
       GroupDescription: allows https traffic
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -137,7 +152,7 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: name
-          Value: "template VPC"
+          Value: !Sub "${Environment}-Vpc"
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -149,7 +164,7 @@ Resources:
       CidrBlock: 10.20.0.0/20
       Tags:
         - Key: name
-          Value: "public subnet us east"
+          Value: !Sub "public subnet 1 - ${Environment}"
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -161,7 +176,7 @@ Resources:
       CidrBlock: 10.20.16.0/20
       Tags:
         - Key: name
-          Value: "public subnet us west"
+          Value: !Sub "public subnet 2 - ${Environment}"
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -173,7 +188,7 @@ Resources:
       CidrBlock: 10.20.32.0/20
       Tags:
         - Key: name
-          Value: "private subnet us east"
+          Value: !Sub "private subnet 1 - ${Environment}"
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -185,13 +200,10 @@ Resources:
       CidrBlock: 10.20.48.0/20
       Tags:
         - Key: name
-          Value: "private subnet us west"
+          Value: !Sub "private subnet 2 - ${Environment}"
   IGW:
     Type: AWS::EC2::InternetGateway
-    Properties:
-      Tags:
-        - Key: keyname
-          Value: value
+    Properties: {}
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -203,7 +215,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: name
-          Value: "public route table"
+          Value: !Sub "Public RT - ${Environment}"
   PublicRoute:
     Type: AWS::EC2::Route
     Properties:
@@ -235,7 +247,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: name
-          Value: "Private Route Table"
+          Value: !Sub "Private Route Table - ${Environment}"
   PrivateNatRoute:
     Type: AWS::EC2::Route
     Properties:
@@ -257,30 +269,30 @@ Resources:
   UserServiceRepo:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Ref UserServiceRepoName
+      RepositoryName: !Sub "${UserServiceRepoName}-${Environment}"
   OrderServiceRepo:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Ref OrderServiceRepoName
+      RepositoryName: !Sub "${OrderServiceRepoName}-${Environment}"
   RestaurantServiceRepo:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Ref RestaurantServiceRepoName
+      RepositoryName: !Sub "${RestaurantServiceRepoName}-${Environment}"
 
   # S3 Buckets
   AccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
-        Comment: for bucket access
+        Comment: !Sub "${Environment} access identity"
   UserPortal:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName: !Ref UserPortalBucketName
+      BucketName: !Sub "${UserPortalBucketName}-${Environment}"
       Tags:
         - Key: name
-          Value: user portal bucket
+          Value: !Sub "UserPortalBucket-${Environment}"
   UserPortalPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -297,10 +309,10 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName: !Ref AdminPortalBucketName
+      BucketName: !Sub "${AdminPortalBucketName}-${Environment}"
       Tags:
         - Key: name
-          Value: admin portal bucket
+          Value: !Sub "AdminPortalBucket-${Environment}"
   AdminPortalPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -317,10 +329,10 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName: !Ref DriverPortalBucketName
+      BucketName: !Sub "${DriverPortalBucketName}-${Environment}"
       Tags:
         - Key: name
-          Value: driver portal bucket
+          Value: !Sub "DriverPortalBucket-${Environment}"
   DriverPortalPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -338,7 +350,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName: !Ref CsvBucketName
+      BucketName: !Sub "${CsvBucketName}-${Environment}"
       LifecycleConfiguration:
         Rules:
           - Status: Enabled
@@ -347,22 +359,12 @@ Resources:
             Transitions:
               - StorageClass: GLACIER
                 TransitionInDays: 3
-  CsvBucketArnSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: CsvBucketArn
-      SecretString: !GetAtt CsvBucket.Arn
-  CsvBucketnameSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: CsvBucketName
-      SecretString: !Ref CsvBucket
 
   # Route 53
   LoadBalancerRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      Name: api.drscrumptious.com
+      Name: !Ref LoadBalancerPath
       Type: CNAME
       TTL: 900
       HostedZoneId: !Ref HostedZoneId
@@ -374,7 +376,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
-      Name: ECSLoadBalancer
+      Name: !Sub "ECSLoadBalancer-${Environment}"
       Scheme: internet-facing
       Type: application
       Subnets:
@@ -406,7 +408,7 @@ Resources:
       HealthCheckPort: 8080
       HealthCheckProtocol: HTTP
       VpcId: !Ref VPC
-      Name: UserTargetGroup
+      Name: !Sub "UserTargetGroup-${Environment}"
       Port: 8080
       Protocol: HTTP
       TargetType: ip
@@ -418,7 +420,7 @@ Resources:
       HealthCheckPort: 8080
       HealthCheckProtocol: HTTP
       VpcId: !Ref VPC
-      Name: OrderTargetGroup
+      Name: !Sub "OrderTargetGroup-${Environment}"
       Port: 8080
       Protocol: HTTP
       TargetType: ip
@@ -430,7 +432,7 @@ Resources:
       HealthCheckPort: 8080
       HealthCheckProtocol: HTTP
       VpcId: !Ref VPC
-      Name: RestaurantTargetGroup
+      Name: !Sub "RestaurantTargetGroup-${Environment}"
       Port: 8080
       Protocol: HTTP
       TargetType: ip
@@ -440,95 +442,105 @@ Resources:
     Properties:
       CapacityProviders:
         - FARGATE
-      ClusterName: !Ref ECSClusterName
+      ClusterName: !Sub "${ECSClusterName}-${Environment}"
 
+  CsvBucketArnSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "CsvBucketArn-${Environment}"
+      SecretString: !GetAtt CsvBucket.Arn
+  CsvBucketnameSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${CsvBucketName}-${Environment}"
+      SecretString: !Ref CsvBucket
   VpcId:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: VpcId
+      Name: !Sub "VpcId-${Environment}"
       SecretString: !Ref VPC
   ServiceSecurityGroupName:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: ServiceSecurityGroup
+      Name: !Sub "ServiceSecurityGroup-${Environment}"
       SecretString: !Ref ServiceSecurityGroup
   FargateRoleARN:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: FargateRoleARN
+      Name: !Sub "FargateRoleARN-${Environment}"
       SecretString: !GetAtt FargateRole.Arn
   PublicSubnet1Secret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: PublicSubnet1
+      Name: !Sub "PublicSubnet1-${Environment}"
       SecretString: !Ref PublicSubnet1
   PublicSubnet2Secret:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref PublicSubnet2
-      Name: PublicSubnet2
+      Name: !Sub "PublicSubnet2-${Environment}"
   PrivateSubnet1Secret:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref PrivateSubnet1
-      Name: PrivateSubnet1
+      Name: !Sub "PrivateSubnet1-${Environment}"
   PrivateSubnet2Secret:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref PrivateSubnet2
-      Name: PrivateSubnet2
+      Name: !Sub "PrivateSubnet2-${Environment}"
   AccessIdentitySecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref AccessIdentity
-      Name: S3AccessIdentity
+      Name: !Sub "S3AccessIdentity-${Environment}"
   LBListenerArn:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref LoadBalancerListener
-      Name: LBListenerARN
+      Name: !Sub "LBListenerARN-${Environment}"
   UserTargetGroupArn:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref UserTargetGroup
-      Name: UserTGArn
+      Name: !Sub "UserTGArn-${Environment}"
   OrderTargetGroupArn:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref OrderTargetGroup
-      Name: OrderTGArn
+      Name: !Sub "OrderTGArn-${Environment}"
   RestaurantTargetGroupArn:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref RestaurantTargetGroup
-      Name: RestaurantTGArn
+      Name: !Sub "RestaurantTGArn-${Environment}"
   ECSClusterNameSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref ECSClusterName
-      Name: ECSClusterName
+      Name: !Sub "ECSClusterName-${Environment}"
   HostedZoneIdSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref HostedZoneId
-      Name: HostedZoneId
+      Name: !Sub "HostedZoneId-${Environment}"
   CertificateArn:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !Ref CertificateARN
-      Name: CertificateARN
+      Name: !Sub "CertificateARN-${Environment}"
   AdminPortalBucketDomainName:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !GetAtt AdminPortal.DomainName
-      Name: AdminPortalDomainName
+      Name: !Sub "AdminPortalDomainName-${Environment}"
   UserPortalBucketDomainName:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !GetAtt UserPortal.DomainName
-      Name: UserPortalDomainName
+      Name: !Sub "UserPortalDomainName-${Environment}"
   DriverPortalBucketDomainName:
     Type: AWS::SecretsManager::Secret
     Properties:
       SecretString: !GetAtt DriverPortal.DomainName
-      Name: DriverPortalDomainName
+      Name: !Sub "DriverPortalDomainName-${Environment}"
