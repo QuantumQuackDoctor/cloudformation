@@ -44,7 +44,7 @@ Resources:
     Properties:
       GroupName: !Sub "DatabaseSecurityGroup-${Environment}"
       GroupDescription: "allows traffic on port 5432"
-      VpcId: "{{resolve:secretsmanager:VpcId}}"
+      VpcId: !Sub "{{resolve:secretsmanager:VpcId-${Environment}}}"
       SecurityGroupIngress:
         - IpProtocol: -1
           FromPort: 5432
