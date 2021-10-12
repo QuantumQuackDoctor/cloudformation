@@ -111,7 +111,7 @@ Resources:
   DatabaseName:
     Type: AWS::SecretsManager::Secret
     Properties:
-      SecretString: !Ref DBName
+      SecretString: !Sub "${DBName}${Environment}"
       Name: !Sub "DBName-${Environment}"
   DatabasePort:
     Type: AWS::SecretsManager::Secret
