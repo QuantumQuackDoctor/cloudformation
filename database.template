@@ -19,7 +19,7 @@ Parameters:
       Must begin with a letter and must not end with a hyphen or contain two
       consecutive hyphens.
   DBName:
-    Default: DB
+    Default: MainDB
     Description: My database
     Type: String
     MinLength: "1"
