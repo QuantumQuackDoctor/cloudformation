@@ -58,7 +58,7 @@ Resources:
     Properties:
       AllocatedStorage: !Ref DBAllocatedStorage
       DBInstanceClass: !Ref DBInstanceClass
-      DBName: !Sub "${DBName}-${Environment}"
+      DBName: !Sub "${DBName}${Environment}"
       DBSubnetGroupName: !Ref DatabaseSubnetGroup
       DBInstanceIdentifier: !Sub "${DBInstanceID}-${Environment}"
       Engine: postgres
