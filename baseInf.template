@@ -517,7 +517,7 @@ Resources:
   ECSClusterNameSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      SecretString: !Ref ECSClusterName
+      SecretString: !Sub "${ECSClusterName}-${Environment}"
       Name: !Sub "ECSClusterName-${Environment}"
   HostedZoneIdSecret:
     Type: AWS::SecretsManager::Secret
