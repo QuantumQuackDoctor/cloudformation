@@ -549,4 +549,4 @@ Resources:
     Properties:
       GenerateSecretString:
         PasswordLength: 32
-      Name: !Sub "Jwt-Secret-${Environment}"
+      Name: !Sub "JwtSecret-${Environment}"
