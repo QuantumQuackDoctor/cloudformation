@@ -544,3 +544,9 @@ Resources:
     Properties:
       SecretString: !GetAtt DriverPortal.DomainName
       Name: !Sub "DriverPortalDomainName-${Environment}"
+  JwtSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      GenerateSecretString:
+        PasswordLength: 32
+      Name: !Sub "Jwt-Secret-${Environment}"
