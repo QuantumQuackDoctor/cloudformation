@@ -27,8 +27,6 @@ Metadata:
           - CertificateARN
       - Label:
           default: "CSV Lambda function"
-        Parameters:
-          - CsvBucketName
 
 Parameters:
   Environment:
@@ -56,10 +54,6 @@ Parameters:
   DriverPortalBucketName:
     Type: String
     Default: qqd-driver-portal
-
-  CsvBucketName:
-    Type: String
-    Default: qqd-csv-bucket
 
   ECSClusterName:
     Type: String
@@ -345,20 +339,6 @@ Resources:
             Resource: !Sub "arn:aws:s3:::${DriverPortal}/*"
             Principal:
               CanonicalUser: !GetAtt AccessIdentity.S3CanonicalUserId
-  # Lambda function Buckets
-  CsvBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub "${CsvBucketName}-${Environment}"
-      LifecycleConfiguration:
-        Rules:
-          - Status: Enabled
-            Id: GlacierRule
-            Prefix: glacier
-            Transitions:
-              - StorageClass: GLACIER
-                TransitionInDays: 3
 
   # Route 53
   LoadBalancerRecord:
@@ -444,16 +424,6 @@ Resources:
         - FARGATE
       ClusterName: !Sub "${ECSClusterName}-${Environment}"
 
-  CsvBucketArnSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: !Sub "CsvBucketArn-${Environment}"
-      SecretString: !GetAtt CsvBucket.Arn
-  CsvBucketnameSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: !Sub "${CsvBucketName}-${Environment}"
-      SecretString: !Ref CsvBucket
   VpcId:
     Type: AWS::SecretsManager::Secret
     Properties:
