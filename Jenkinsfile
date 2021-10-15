@@ -3,7 +3,7 @@ pipeline {
     parameters{
         string(name: 'HostedZoneId', defaultValue: params.HostedZoneId ?: '')
         string(name: 'CertificateARN', defaultValue: params.CertificateARN ?: '')
-        string(name: 'Environment' defaultValue: params.Environment ?: 'dev')
+        string(name: 'Environment', defaultValue: params.Environment ?: 'dev')
     }
     stages{
         stage("Deploy Base Infrastructure"){
