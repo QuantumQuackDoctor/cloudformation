@@ -1,0 +1,16 @@
+
+pipeline {
+    agent any
+    parameters{
+        string(name: 'HostedZoneId', defaultValue: params.HostedZoneId ?: '')
+        string(name: 'CertificateARN', defaultValue: params.CertificateARN ?: '')
+        string(name: 'Environment', defaultValue: params.Environment ?: 'dev')
+    }
+    stages{
+        stage("Deploy Database"){
+            steps {
+                sh "aws cloudformation deploy --stack-name Database-${params.Environment} --region ${AWS_REGION} --template-file database.template --parameter-overrides Environment=${params.Environment} --no-fail-on-empty-changeset --capabilities CAPABILITY_NAMED_IAM"
+            }
+        }
+    }
+}
